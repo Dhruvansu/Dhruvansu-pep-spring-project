@@ -1,8 +1,14 @@
 package com.example.controller;
 
+import javax.naming.AuthenticationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
@@ -28,10 +34,35 @@ public class SocialMediaController {
         this.messageService = messageService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<Account> register(Account account) throws DuplicateAccountException{
-        accountService.register(account);
-        return ResponseEntity.ok().body(account);
+    // Registering Account and Presesting it to Database
+    @PostMapping("register")
+    public ResponseEntity<Account> register(@RequestBody Account account) throws DuplicateAccountException, Exception{
+        Account presistedAccount = accountService.register(account);
+        return ResponseEntity.ok().body(presistedAccount);
+    }
+
+    @ExceptionHandler(DuplicateAccountException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleDuplicateAccount(DuplicateAccountException ex){
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleClientError(Exception ex){
+        return ex.getMessage();
+    }
+
+    @PostMapping("login")
+    public ResponseEntity<Account> login(@RequestBody Account account) throws AuthenticationException{
+        Account successfulLogin = accountService.login(account.getUsername(), account.getPassword());
+        return ResponseEntity.ok().body(successfulLogin);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public String handledUnauthorized(AuthenticationException exception){
+        return exception.getMessage();
     }
 
 }

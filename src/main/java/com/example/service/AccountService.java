@@ -1,5 +1,6 @@
 package com.example.service;
 
+import javax.naming.AuthenticationException;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,21 @@ public class AccountService {
         this.accountRepository = accountRepository;
     }
 
-    public void register(Account newAccount) throws DuplicateAccountException{
-        //Account oldAccount = accountRepository.findByUsername(newAccount.getUsername());
-        accountRepository.save(newAccount);
+    public Account register(Account newAccount) throws DuplicateAccountException, Exception{
+        if(!(newAccount.getUsername().isBlank()) && ((newAccount.getPassword().length() > 3))){
+            if((accountRepository.findByUsername(newAccount.getUsername()).isEmpty())){
+                accountRepository.save(newAccount);
+                return accountRepository.getById(newAccount.getAccountId());
+            } else{
+                throw new DuplicateAccountException("Account Already Exists");
+            }
+        }
+        throw new Exception();
+    }
+
+    public Account login(String username, String password) throws AuthenticationException{
+        Account valid = accountRepository.findByUsernameAndPassword(username, password).
+            orElseThrow(() -> new AuthenticationException());
+        return accountRepository.getById(valid.getAccountId());
     }
 }
