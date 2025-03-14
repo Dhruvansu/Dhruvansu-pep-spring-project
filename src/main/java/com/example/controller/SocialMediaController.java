@@ -1,11 +1,17 @@
 package com.example.controller;
 
+import java.util.List;
+
 import javax.naming.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -65,4 +71,43 @@ public class SocialMediaController {
         return exception.getMessage();
     }
 
+    @PostMapping("messages")
+    public ResponseEntity<Message> postMessage(@RequestBody Message message) throws Exception{
+        Message postedMessage = messageService.postMessage(message.getPostedBy(), 
+                                                        message.getMessageText(), 
+                                                        message.getTimePostedEpoch());
+        return ResponseEntity.ok().body(postedMessage);
+    }
+
+    @GetMapping("messages")
+    public ResponseEntity<List<Message>> getAllMessages(){
+        List<Message> allMessages = messageService.getAllMessages();
+        return ResponseEntity.ok().body(allMessages);
+    }
+
+    @GetMapping("messages/{messageId}")
+    public ResponseEntity<Message> getMessageUsingMessageId(@PathVariable Integer messageId){
+        Message retrievedMessage = messageService.getMessageUsingMessageId(messageId);
+        return ResponseEntity.ok().body(retrievedMessage);
+    }
+
+    @DeleteMapping("messages/{messageId}")
+    public ResponseEntity<String> deleteMessageUsingMessageId(@PathVariable Integer messageId){
+        Boolean messageDeletedSuccessfully = messageService.deleteMessageUsingMessageId(messageId);
+        return messageDeletedSuccessfully ? 
+            ResponseEntity.ok().body("1") : ResponseEntity.ok().body("");
+    }
+
+    @PatchMapping("messages/{messageId}")
+    public ResponseEntity<String> updateMessageText(@PathVariable Integer messageId, 
+                                @RequestBody Message patchMessage) throws Exception{
+        messageService.updateMessageText(messageId, patchMessage.getMessageText());
+        return ResponseEntity.ok().body("1");
+    }
+
+    @GetMapping("accounts/{accountId}/messages")
+    public ResponseEntity<List<Message>> getAllMessageUsingAccountId(@PathVariable Integer accountId){
+        List<Message> allMessagesFromUser = messageService.getAllMessageUsingAccountId(accountId);
+        return ResponseEntity.ok().body(allMessagesFromUser);
+    }
 }
